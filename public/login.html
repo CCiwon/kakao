@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <a id="kakao-login-btn"></a>
+    <div id="result"></div>
+    
+    <script type="text/javascript">
+        // Kakao SDK 초기화
+        Kakao.init('7b30e53d36d5bc8f0448e9548e853f4b');
+        console.log(Kakao.isInitialized());
+
+        // 카카오 로그인 버튼 생성
+        Kakao.Auth.createLoginButton({
+            container: '#kakao-login-btn',
+            success: function(authObj) {
+                Kakao.API.request({
+                    url: '/v2/user/me',
+                    success: function(result) {
+                        const id = result.id;
+                        const nickname = result.kakao_account.profile.nickname || 'No nickname';
+
+                        // 서버로 사용자 데이터 전송
+                        fetch('/save-user', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                id: id,
+                                nickname: nickname
+                            }),
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('서버 응답:', data);
+                            alert('로그인 데이터 저장 성공!');
+                        })
+                        .catch(err => {
+                            console.error('데이터 저장 실패:', err);
+                            alert('로그인 데이터 저장 실패!');
+                        });
+                    },
+                    fail: function(error) {
+                        alert('사용자 정보 요청 실패: ' + JSON.stringify(error));
+                    }
+                });
+            },
+            fail: function(err) {
+                alert('로그인 실패: ' + JSON.stringify(err));
+            },
+        });
+    </script>
+</body>
+</html>
